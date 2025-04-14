@@ -12,6 +12,9 @@ ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into t
 - Receive AI-assisted overview, summaries, tables, and visualizations
 - Engage in a virtual chavruta experience
 
+## Bibliography
+
+
 ## Tech Stack (Coming Soon)
 
 - **Frontend**: React.js with Tailwind CSS
