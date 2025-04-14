@@ -1,8 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTalmudSection } from '../../services/sefariaService';
 
-const TextDisplay = ({ tractate, page, text, translation }) => {
+const TextDisplay = ({ tractate, page, text, translation, onTextLoad }) => {
   const [viewMode, setViewMode] = useState('bilingual'); // 'hebrew', 'english', 'bilingual'
+  const [textData, setTextData] = useState({
+    text: text || [],
+    translation: translation || []
+  });
+  const [isLoading, setIsLoading] = useState(!text);
+  const [error, setError] = useState(null);
   
+  // Fetch text data from Sefaria when tractate or page changes
+  useEffect(() => {
+    const fetchText = async () => {
+      if (!tractate || !page) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const data = await getTalmudSection(tractate, page);
+        setTextData({
+          text: data.text || [],
+          translation: data.translation || []
+        });
+        
+        // Call the callback function if provided
+        if (onTextLoad) {
+          onTextLoad(data);
+        }
+      } catch (err) {
+        console.error('Error fetching text:', err);
+        setError('Failed to load the text. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // If text is provided as props, use that instead of fetching
+    if (text && translation) {
+      setTextData({ text, translation });
+      setIsLoading(false);
+    } else {
+      fetchText();
+    }
+  }, [tractate, page, onTextLoad, text, translation]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="text-red-500">
+          <h3 className="text-xl font-bold mb-2">Error</h3>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
@@ -54,7 +122,7 @@ const TextDisplay = ({ tractate, page, text, translation }) => {
             dir="rtl" 
             lang="he"
           >
-            {text.map((paragraph, index) => (
+            {textData.text.map((paragraph, index) => (
               <p key={`hebrew-${index}`} className="mb-3">
                 {paragraph}
               </p>
@@ -64,7 +132,7 @@ const TextDisplay = ({ tractate, page, text, translation }) => {
         
         {(viewMode === 'english' || viewMode === 'bilingual') && (
           <div className="english-text text-left">
-            {translation.map((paragraph, index) => (
+            {textData.translation.map((paragraph, index) => (
               <p key={`english-${index}`} className="mb-3">
                 {paragraph}
               </p>

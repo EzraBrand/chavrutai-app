@@ -1,38 +1,33 @@
-.App {
-  text-align: center;
+/* Apply Hebrew font for Hebrew text */
+@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&display=swap');
+
+.font-hebrew, 
+[lang="he"],
+[dir="rtl"] {
+  font-family: 'Frank Ruhl Libre', serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Custom scrollbar for text containers */
+.hebrew-text,
+.english-text {
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Ensure proper RTL (right-to-left) display for Hebrew */
+[dir="rtl"] {
+  text-align: right;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Ensure proper spacing for paragraphs in text display */
+.hebrew-text p,
+.english-text p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Increase font size for Hebrew text to improve readability */
+.hebrew-text {
+  font-size: 1.25rem;
 }
