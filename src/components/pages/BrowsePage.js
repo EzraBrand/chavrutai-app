@@ -1,135 +1,282 @@
+// src/components/pages/BrowsePage.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getTalmudTractates, getTractateStructure } from '../../services/sefariaService';
+import { 
+  getTalmudTractates, 
+  getTractateStructure,
+  getPredefinedTractates,
+  generatePageRefs
+} from '../../services/sefariaService';
 
 const BrowsePage = () => {
   const [tractates, setTractates] = useState([]);
-  const [selectedTractate, setSelectedTractate] = useState(null);
-  const [tractatePages, setTractatePages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Fetch the list of tractates
+  const [selectedTractate, setSelectedTractate] = useState(null);
+  const [tractateStructure, setTractateStructure] = useState(null);
+  const [loadingStructure, setLoadingStructure] = useState(false);
+  const [structureError, setStructureError] = useState(null);
+
+  // Load tractates on component mount
   useEffect(() => {
-    const fetchTractates = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getTalmudTractates();
-        setTractates(data);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error fetching tractates:', err);
-        setError('Failed to load tractates. Please try again later.');
-        setIsLoading(false);
-      }
-    };
-    
-    fetchTractates();
+    loadTractates();
   }, []);
-  
-  // Fetch the structure of a selected tractate
-  const handleTractateSelect = async (tractate) => {
-    setSelectedTractate(tractate);
+
+  // Function to load tractates with detailed error handling
+  const loadTractates = async () => {
+    setLoading(true);
+    setError(null);
     
     try {
-      setIsLoading(true);
-      const structure = await getTractateStructure(tractate.title);
+      console.log('Fetching tractates from API...');
+      const data = await getTalmudTractates();
       
-      // Process the pages - this might need adjustment based on the actual API response
-      let pages = [];
+      console.log('Tractates API response:', data);
       
-      // Sefaria's API returns different structures for different texts
-      // This is a simplified approach
-      if (structure.lengths && structure.lengths[0]) {
-        const pageCount = structure.lengths[0];
-        
-        // Generate 'a' and 'b' sides for each page
-        for (let i = 1; i <= pageCount; i++) {
-          pages.push(`${i}a`);
-          pages.push(`${i}b`);
-        }
-      } else if (structure.schema && structure.schema.nodes) {
-        // Alternative structure format
-        pages = structure.schema.nodes
-          .filter(node => node.nodeType === 'JaggedArrayNode')
-          .flatMap(node => {
-            const count = node.depth === 1 ? node.lengths[0] : 0;
-            return Array.from({ length: count * 2 }, (_, i) => 
-              `${Math.floor(i/2) + 1}${i % 2 === 0 ? 'a' : 'b'}`
-            );
-          });
+      if (!data || !Array.isArray(data)) {
+        console.error('Invalid data format received:', data);
+        throw new Error('Invalid data format received from API');
       }
       
-      setTractatePages(pages);
-      setIsLoading(false);
-    } catch (err) {
-      console.error(`Error fetching structure for ${tractate.title}:`, err);
-      setError(`Failed to load pages for ${tractate.title}. Please try again later.`);
-      setIsLoading(false);
+      if (data.length === 0) {
+        console.warn('Empty tractates array received');
+        throw new Error('No tractates found');
+      }
+      
+      setTractates(data);
+      console.log('Successfully loaded', data.length, 'tractates');
+    } catch (error) {
+      console.error('Error loading tractates:', error);
+      setError(`Failed to load tractates: ${error.message}`);
+      
+      // Try to use the predefined list as a fallback
+      console.log('Using predefined tractate list as fallback');
+      const predefinedList = getPredefinedTractates();
+      if (predefinedList && predefinedList.length > 0) {
+        setTractates(predefinedList.map(title => ({ title })));
+        setError('Using local tractate list due to API error');
+      }
+    } finally {
+      setLoading(false);
     }
   };
-  
-  if (error) {
+
+  // Function to handle tractate selection
+  const handleTractateSelect = async (tractate) => {
+    const tractateTitle = tractate.title || tractate;
+    console.log(`Selected tractate title: ${tractateTitle}`); // Debug log
+    setSelectedTractate(tractateTitle);
+    setLoadingStructure(true);
+    setStructureError(null);
+    setTractateStructure(null);
+    
+    try {
+      console.log(`Loading structure for tractate: ${tractateTitle}`);
+      const data = await getTractateStructure(tractateTitle);
+      
+      console.log('Tractate structure response:', data);
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setTractateStructure(data);
+    } catch (error) {
+      console.error('Error loading tractate structure:', error);
+      setStructureError(`Failed to load structure: ${error.message}`);
+      
+      // Create a fallback structure if needed
+      const fallbackPages = generatePageRefs(50); // First 50 pages
+      setTractateStructure({
+        title: tractateTitle,
+        isFallback: true,
+        fallbackPages
+      });
+    } finally {
+      setLoadingStructure(false);
+    }
+  };
+
+  // Render function for tractate list
+  const renderTractateList = () => (
+    <div className="bg-white rounded-lg shadow">
+      <h2 className="text-xl font-bold p-4 border-b">Tractates</h2>
+      <ul className="divide-y max-h-[70vh] overflow-y-auto">
+        {tractates.map((tractate, index) => (
+          <li 
+            key={index}
+            className={`p-3 hover:bg-gray-100 cursor-pointer ${selectedTractate === (tractate.title || tractate) ? 'bg-blue-50' : ''}`}
+            onClick={() => handleTractateSelect(tractate)}
+          >
+            {tractate.title || tractate}
+            {tractate.heTitle && <span className="text-gray-500 ml-2">({tractate.heTitle})</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  // Render function for tractate structure with fallback handling
+  const renderTractateStructure = () => {
+    if (!selectedTractate) {
+      return (
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-gray-600">Select a tractate from the list to view details</p>
+        </div>
+      );
+    }
+
+    if (loadingStructure) {
+      return (
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-center py-8">Loading structure for {selectedTractate}...</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Browse Talmud</h1>
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <div className="bg-white rounded-lg shadow p-4">
+        <h2 className="text-xl font-bold mb-4">
+          {selectedTractate}
+          {structureError && (
+            <span className="text-sm font-normal text-yellow-600 ml-2">
+              (Limited information available)
+            </span>
+          )}
+        </h2>
+        
+        {structureError && (
+          <div className="mb-4 text-yellow-600 text-sm">
+            {structureError}
+          </div>
+        )}
+        
+        {tractateStructure && (
+          <>
+            {/* Standard schema.nodes structure */}
+            {tractateStructure.schema?.nodes && (
+              <div>
+                <h3 className="font-semibold mb-2">Chapters</h3>
+                <div className="space-y-4">
+                  {tractateStructure.schema.nodes.map((chapter, chIndex) => (
+                    <div key={chIndex}>
+                      <h4 className="font-medium">Chapter {chIndex + 1}</h4>
+                      {chapter.refs && (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-2">
+                          {chapter.refs.map((ref, refIndex) => {
+                            const pagePart = ref.split('.')[1] || '';
+                            return (
+                              <Link 
+                                to={`/text/${ref}`}
+                                key={refIndex}
+                                className="bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-center text-blue-700"
+                              >
+                                {pagePart}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Alternative schema.refs structure */}
+            {!tractateStructure.schema?.nodes && tractateStructure.schema?.refs && (
+              <div>
+                <h3 className="font-semibold mb-2">Pages</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {tractateStructure.schema.refs.map((ref, refIndex) => {
+                    const pagePart = ref.split('.')[1] || '';
+                    return (
+                      <Link 
+                        to={`/text/${ref}`}
+                        key={refIndex}
+                        className="bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-center text-blue-700"
+                      >
+                        {pagePart}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Fallback structure when schema is not available */}
+            {tractateStructure.isFallback && tractateStructure.fallbackPages && (
+              <div>
+                <h3 className="font-semibold mb-2">Pages (Basic Navigation)</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {tractateStructure.fallbackPages.map((page, index) => (
+                    <Link 
+                      to={`/text/${selectedTractate}.${page}`}
+                      key={index}
+                      className="bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-center text-blue-700"
+                    >
+                      {page}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* If no schema structure is available at all */}
+            {!tractateStructure.schema?.nodes && 
+             !tractateStructure.schema?.refs && 
+             !tractateStructure.isFallback && (
+              <div>
+                <p className="text-yellow-700">
+                  Structure format not recognized. Debug information:
+                </p>
+                <details>
+                  <summary className="cursor-pointer text-sm text-blue-500">Structure Data</summary>
+                  <pre className="text-xs mt-2 p-2 bg-gray-100 rounded overflow-x-auto">
+                    {JSON.stringify(tractateStructure, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Browse Talmud</h1>
+      
+      {/* Error message */}
+      {error && error !== 'Using local tractate list due to API error' && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <p>{error}</p>
           <button 
-            onClick={() => window.location.reload()}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+            onClick={loadTractates}
           >
             Try Again
           </button>
         </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Browse Talmud</h1>
+      )}
       
-      {/* Tractate selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {tractates.map((tractate) => (
-          <div 
-            key={tractate.title}
-            onClick={() => handleTractateSelect(tractate)}
-            className={`p-4 border rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors ${
-              selectedTractate?.title === tractate.title ? 'bg-indigo-100 border-indigo-500' : 'bg-white border-gray-200'
-            }`}
-          >
-            <h3 className="text-lg font-semibold">{tractate.title}</h3>
-            <p className="text-right font-hebrew" dir="rtl">{tractate.heTitle}</p>
+      {/* Loading state for initial tractate list */}
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-lg">Loading tractates...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Tractate list */}
+          <div className="md:col-span-4">
+            {renderTractateList()}
           </div>
-        ))}
-      </div>
-      
-      {/* Page listing */}
-      {selectedTractate && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {selectedTractate.title} Pages
-          </h2>
           
-          {isLoading ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {tractatePages.map((page) => (
-                <Link 
-                  key={page}
-                  to={`/text/${selectedTractate.title}.${page}`}
-                  className="p-3 text-center border border-gray-200 rounded-md hover:bg-indigo-500 hover:text-white transition-colors"
-                >
-                  {page}
-                </Link>
-              ))}
-            </div>
-          )}
+          {/* Tractate details */}
+          <div className="md:col-span-8">
+            {renderTractateStructure()}
+          </div>
         </div>
       )}
     </div>
