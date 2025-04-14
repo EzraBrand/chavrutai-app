@@ -1,14 +1,15 @@
 # ChavrutAI
 
-ChavrutAI is an interactive tool for studying Jewish texts with AI-assisted insights. The application provides access to traditional texts along with AI-generated analysis, explanations, and collaborative learning features.
+ChavrutAI will be an interactive tool for studying Talmud with AI-assisted tools. 
+
+The application will provides access to traditional Talmud texts along with additional curated AI-generated overviews, background, summmaries, and collaborative learning features.
 
 ## Project Overview
 
-ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into the digital age by combining ancient texts with modern AI technology. This application enables users to:
+ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into the digital age by combining ancient texts with modern AI technology. This application will enable users to:
 
-- Access and navigate Jewish texts
-- Receive AI-assisted analysis and explanations
-- Save insights and annotations
+- Access and navigate Talmud in an optiized way.
+- Receive AI-assisted overview, summaries, tables, and visualizations
 - Engage in a virtual chavruta experience
 
 ## Tech Stack (Coming Soon)
