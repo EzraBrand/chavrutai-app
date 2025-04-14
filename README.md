@@ -13,6 +13,9 @@ ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into t
 - Engage in a virtual chavruta experience
 
 ## Bibliography
+- [Proposal for ChavrutAI: An AI Chavruta for Studying Talmud](https://www.ezrabrand.com/p/proposal-for-chavrutai-an-ai-chavruta)
+- [From Print to Pixel: Digital Editions of the Talmud Bavli – The Seforim Blog](https://seforimblog.com/2023/06/from-print-to-pixel-digital-editions-of-the-talmud-bavli/)
+
 
 ## About Me
 I'm an amateur hobby coder. In my day job, I have extensive experience with advanced spreadsheets. 
