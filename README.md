@@ -23,6 +23,8 @@ On the side, I've built a number of tools for digital humanities purposes, mostl
 Recently, I've been working especially with React, Github Codespaces, Vercel, and API querying. 
 This current project is my biggest project yet.
 
+You can read more about me here: [About \- Talmud & Tech](https://www.ezrabrand.com/about)
+
 ## Tech Stack (Coming Soon)
 
 - **Frontend**: React.js with Tailwind CSS
