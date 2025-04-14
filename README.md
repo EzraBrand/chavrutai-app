@@ -31,7 +31,7 @@ You can read more about me here: [About \- Talmud & Tech](https://www.ezrabrand.
 - **Backend**: Node.js with Express
 - **AI Integration**: Sefaria for the base Talmud text; OpenAI or Claude for analysis of the text
 - **Deployment**: Vercel/Netlify (frontend), Vercel Serverless/Render/Railway (backend)
-- **Domain**: Integrated with existing Squarespace domain (chavrutai.com)
+- **Domain**: Integrated with existing Squarespace domain ([ChavrutAI](https://chavrutai.com/))
 
 
 ## Project Structure (Coming Soon)
