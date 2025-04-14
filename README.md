@@ -14,12 +14,17 @@ ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into t
 
 ## Bibliography
 
+## About Me
+I'm an amateur hobby coder. In my day job, I have extensive experience with advanced spreadsheets. 
+On the side, I've built a number of tools for digital humanities purposes, mostly using Google Colab notebooks. 
+Recently, I've been working especially with React, Github Codespaces, Vercel, and API querying. 
+This current project is my biggest project yet.
 
 ## Tech Stack (Coming Soon)
 
 - **Frontend**: React.js with Tailwind CSS
 - **Backend**: Node.js with Express
-- **AI Integration**: OpenAI API
+- **AI Integration**: Sefaria for the base Talmud text; OpenAI or Claude for analysis of the text
 - **Deployment**: Vercel/Netlify (frontend), Vercel Serverless/Render/Railway (backend)
 - **Domain**: Integrated with existing Squarespace domain (chavrutai.com)
 
