@@ -31,10 +31,8 @@ const TextDisplay = () => {
 
   // Calculate previous and next page references
   const calculatePrevNext = (currentPage) => {
-    // Simple implementation for basic pagination
     if (!currentPage || !parsed.tractate) return { prev: null, next: null };
     
-    // Parse the page (e.g., "2b")
     const match = currentPage.match(/^(\d+)([ab])$/);
     if (!match) return { prev: null, next: null };
     
@@ -44,21 +42,15 @@ const TextDisplay = () => {
     let prevPage = null;
     let nextPage = null;
     
-    // Calculate previous page
     if (pageSide === 'b') {
-      // If on 'b' side, previous is the 'a' side of same number
       prevPage = `${pageNum}a`;
     } else if (pageNum > 2) {
-      // If on 'a' side and not the first page, previous is the 'b' side of previous number
       prevPage = `${pageNum - 1}b`;
     }
     
-    // Calculate next page
     if (pageSide === 'a') {
-      // If on 'a' side, next is the 'b' side of same number
       nextPage = `${pageNum}b`;
     } else {
-      // If on 'b' side, next is the 'a' side of next number
       nextPage = `${pageNum + 1}a`;
     }
     
@@ -77,31 +69,18 @@ const TextDisplay = () => {
       setError(null);
       
       try {
-        console.log(`Loading text for reference: ${reference}`);
         const data = await getTalmudSection(reference);
         
-        if (!data) {
-          throw new Error('No data returned from API');
+        if (!data || (!data.text && !data.he)) {
+          throw new Error('No text content returned from API');
         }
         
-        console.log('Text data:', data);
         setText(data);
         
-        // Set prev/next based on API response if available, or calculate
-        if (data.prev || data.next) {
-          setPrevNextRefs({
-            prev: data.prev,
-            next: data.next
-          });
-        } else {
-          // Calculate based on page number
-          setPrevNextRefs(calculatePrevNext(parsed.page));
-        }
+        setPrevNextRefs(calculatePrevNext(parsed.page));
       } catch (error) {
         console.error('Error loading text:', error);
         setError(`Failed to load the text. Please try again later.`);
-        
-        // Still calculate prev/next for navigation even on error
         setPrevNextRefs(calculatePrevNext(parsed.page));
       } finally {
         setLoading(false);
@@ -109,7 +88,7 @@ const TextDisplay = () => {
     };
     
     loadText();
-  }, [reference]);
+  }, [reference, parsed.page]);
 
   // Handle retry
   const handleRetry = () => {
@@ -118,12 +97,7 @@ const TextDisplay = () => {
     getTalmudSection(reference)
       .then(data => {
         setText(data);
-        if (data.prev || data.next) {
-          setPrevNextRefs({
-            prev: data.prev,
-            next: data.next
-          });
-        }
+        setPrevNextRefs(calculatePrevNext(parsed.page));
       })
       .catch(err => {
         console.error('Error on retry:', err);
@@ -179,7 +153,7 @@ const TextDisplay = () => {
           to="/browse" 
           className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
         >
-          Previous Page
+          Back to Browse
         </Link>
         
         <h1 className="text-2xl font-bold">
@@ -187,7 +161,7 @@ const TextDisplay = () => {
           {parsed.section && <span className="text-gray-500">:{parsed.section}</span>}
         </h1>
         
-        <div className="invisible">Spacer</div> {/* For centering the title */}
+        <div className="invisible">Spacer</div>
       </div>
       
       {/* Navigation buttons */}
@@ -251,7 +225,7 @@ const TextDisplay = () => {
         )}
       </div>
       
-      {/* Debug information for development */}
+      {/* Debug information */}
       {process.env.NODE_ENV === 'development' && !loading && text && (
         <div className="mt-8 p-4 bg-gray-100 rounded">
           <details>

@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTalmudSection } from '../../services/sefariaService';
 
-const AnalysisPanel = ({ tractate, page, isLoading, analysisData }) => {
+const AnalysisPanel = ({ tractate, page, isLoading: parentLoading }) => {
   const [activeTab, setActiveTab] = useState('summary');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [analysisData, setAnalysisData] = useState({});
   
   const tabs = [
     { id: 'summary', label: 'Summary' },
@@ -10,11 +14,62 @@ const AnalysisPanel = ({ tractate, page, isLoading, analysisData }) => {
     { id: 'commentary', label: 'Commentary' },
   ];
 
-  // Function to simulate generating new analysis
-  const handleGenerateAnalysis = (type) => {
-    // In real implementation, this would call your AI service
-    console.log(`Generating ${type} for ${tractate} ${page}`);
-    // You would set loading state and make API call here
+  // Load text data when tractate/page changes
+  useEffect(() => {
+    const loadText = async () => {
+      if (!tractate || !page) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const data = await getTalmudSection(`${tractate}.${page}`);
+        
+        if (!data || (!data.text && !data.he)) {
+          throw new Error('No text content returned from API');
+        }
+
+        // Use functional update to avoid dependency on analysisData
+        setAnalysisData(prevData => ({
+          ...prevData,
+          [activeTab]: Array.isArray(data.text) ? data.text : [data.text]
+        }));
+      } catch (error) {
+        console.error('Error loading text:', error);
+        setError('Failed to load the text. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadText();
+  }, [tractate, page, activeTab]);
+
+  // Generate new analysis (placeholder for AI analysis integration)
+  const handleGenerateAnalysis = async (type) => {
+    if (!tractate || !page) {
+      setError('Missing tractate or page reference');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getTalmudSection(`${tractate}.${page}`);
+      
+      // Just use the text data for now - this will be replaced with actual AI analysis
+      setAnalysisData(prev => ({
+        ...prev,
+        [type]: [`Loading ${type} analysis...`, 
+                 `Text loaded successfully. AI analysis will be implemented soon.`]
+      }));
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+      setError('Failed to generate analysis. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
@@ -38,7 +93,7 @@ const AnalysisPanel = ({ tractate, page, isLoading, analysisData }) => {
       </div>
       
       <div className="p-6">
-        {isLoading ? (
+        {(loading || parentLoading) ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
           </div>
@@ -57,6 +112,7 @@ const AnalysisPanel = ({ tractate, page, isLoading, analysisData }) => {
           </div>
         ) : (
           <div className="text-center py-12">
+            {error && <p className="text-red-500 mb-4">{error}</p>}
             <p className="text-gray-500 mb-4">No analysis available for this section yet.</p>
             <button
               onClick={() => handleGenerateAnalysis(activeTab)}
