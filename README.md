@@ -9,7 +9,7 @@ The application will provides access to traditional Talmud texts along with addi
 ChavrutAI brings the traditional Jewish learning partnership ("chavruta") into the digital age by combining ancient texts with modern AI technology. This application will enable users to:
 
 - Access and navigate Talmud in an optimized way.
-- Receive AI-assisted overview, summaries, tables, and visualizations
+- Receive AI-assisted overviews, summaries, tables, and visualizations
 - Engage in a virtual chavruta experience
 
 ## Bibliography
